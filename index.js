@@ -19,8 +19,7 @@ import {
 } from '@expo-google-fonts/ubuntu';
 
 
-import Tour from './src/pages/Tour'
-import Login from './src/pages/Login'
+import Routes from './src/routes'
 
 const App = () => {
     let [fontsLoaded] = useFonts({
@@ -39,7 +38,7 @@ const App = () => {
     return (
         <ThemeProvider theme={colors}>
             <PaperProvider>
-                <Login />
+                <Routes />
             </PaperProvider>
         </ThemeProvider>
     )
