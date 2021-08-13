@@ -3,10 +3,11 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons'
-
 import { StatusBar } from 'react-native'
 
+import { navigationRef } from './services/navigation'
 import { colors } from './data/theme.json'
+
 import Tour from './pages/Tour'
 import Login from './pages/Login'
 import Home from './pages/Home'
@@ -77,8 +78,8 @@ const Routes = () => {
     return (
         <>
             <StatusBar backgroundColor={colors.dark} />
-            <NavigationContainer>
-                <Stack.Navigator initialRouteName="Home">
+            <NavigationContainer ref={navigationRef}>
+                <Stack.Navigator initialRouteName="Tour">
                     <Stack.Screen 
                         options={{ headerShown: false }}
                         name="Home"
@@ -89,6 +90,12 @@ const Routes = () => {
                         options={{ headerShown: false }}
                         name="Tour"
                         component={Tour}
+                    />
+
+                    <Stack.Screen 
+                        options={{ headerShown: false }}
+                        name="Login"
+                        component={Login}
                     />
 
                 </Stack.Navigator>

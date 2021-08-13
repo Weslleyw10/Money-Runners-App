@@ -1,10 +1,12 @@
 import React, { useState } from "react"
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { Box, Title, Spacer, Cover, Text, Button } from '../../components'
 import illustrationOne from '../../assets/images/illustration-1.png'
 import illustrationTwo from '../../assets/images/illustration-2.png'
 import illustrationThree from '../../assets/images/illustration-3.png'
 
+import { replace } from '../../services/navigation'
 
 const Tour = () => {
     const tourData = [
@@ -29,9 +31,15 @@ const Tour = () => {
           desc: 'Pensamos em um serviço perfeito pra você não perder mais aquele compromisso inadiável (denovo).',
           pic: illustrationThree,
         },
-      ];
+    ];
 
-      const [ currentTour, setCurrentTour ] = useState(0)
+    const [ currentTour, setCurrentTour ] = useState(0)
+
+    const goToLogin = async () => {
+      await AsyncStorage.setItem('@tour', 'Y')
+      replace('Login')
+    }
+
 
 
     return (
@@ -53,7 +61,13 @@ const Tour = () => {
             <Button 
                 background={tourData[currentTour].button} 
                 block
-                onPress={() => setCurrentTour(currentTour+1)}
+                onPress={() => {
+                  if(currentTour === 2) {
+                    goToLogin()
+                  } else {
+                    setCurrentTour(currentTour+1)
+                  }
+                }}
             >
                 { currentTour === '2' ? 'Explorar' : 'Próximo'}
             </Button>

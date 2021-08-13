@@ -2,10 +2,13 @@ import React from "react"
 import 'react-native-gesture-handler';
 import { registerRootComponent } from 'expo';
 
+import { Provider as StoreProvider } from 'react-redux'
 import { ThemeProvider } from 'styled-components/native'
 import { Provider as PaperProvider } from 'react-native-paper'
-
 import { colors } from './src/data/theme.json'
+
+import store from './src/store'
+
 import {
     useFonts,
     Ubuntu_300Light,
@@ -36,11 +39,13 @@ const App = () => {
     if (!fontsLoaded) { return null }
 
     return (
-        <ThemeProvider theme={colors}>
-            <PaperProvider>
-                <Routes />
-            </PaperProvider>
-        </ThemeProvider>
+        <StoreProvider store={store}>
+            <ThemeProvider theme={colors}>
+                <PaperProvider>
+                    <Routes />
+                </PaperProvider>
+            </ThemeProvider>
+        </StoreProvider>
     )
 }
 
