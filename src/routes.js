@@ -72,14 +72,12 @@ const HomeTabs = () => {
     )
 }
 
-
-
 const Routes = () => {
     return (
         <>
             <StatusBar backgroundColor={colors.dark} />
             <NavigationContainer ref={navigationRef}>
-                <Stack.Navigator initialRouteName="Tour">
+                <Stack.Navigator initialRouteName="Login">
                     <Stack.Screen 
                         options={{ headerShown: false }}
                         name="Home"
@@ -96,6 +94,18 @@ const Routes = () => {
                         options={{ headerShown: false }}
                         name="Login"
                         component={Login}
+                    />
+
+                    <Stack.Screen 
+                        options={{ headerShown: false }}
+                        name="Payment"
+                        component={Payment}
+                    />
+
+                    <Stack.Screen 
+                        options={{ headerShown: false }}
+                        name="Timer"
+                        component={Timer}
                     />
 
                 </Stack.Navigator>

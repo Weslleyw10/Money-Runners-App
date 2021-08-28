@@ -77,7 +77,6 @@ export const Cover = styled.ImageBackground.attrs((props) =>
   border-radius: ${(props) => (props.circle ? props.width : '3px')};
   border: ${(props) => props.border || 'none'};
   overflow: hidden;
-
   /* background-color: ${({ theme, transparent }) => transparent ? 'transparent' : theme.muted}; */
 
 `;

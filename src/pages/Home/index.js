@@ -1,5 +1,14 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import YoutubePlayer from "react-native-youtube-iframe";
+import moment from 'moment';
+import 'moment/locale/pt-br'
+
+import utils from '../../utils'
+import { colors } from '../../data/theme.json'
+import { navigate } from '../../services/navigation'
+import { getHome, setTracking } from '../../store/modules/app/actions'
+import { startInterval, stopInterval, updateTrackingTime } from '../../services/timer'
 
 import {
     Box,
@@ -16,9 +25,63 @@ import {
     FlatList,
     Badge
 } from '../../components'
-import { colors } from '../../data/theme.json'
 
 const Home = () => {
+    moment.locale('pt-br')
+    const dispatch = useDispatch()
+
+    const {
+        user,
+        form,
+        isParticipating,
+        challenge,
+        balance,
+        dailyAmount,
+        challengePeriod,
+        participatedTimes,
+        discipline,
+        dailyResults,
+        timer,
+        trackings
+    } = useSelector(state => state.app)
+
+    const [timeToChallenge, setTimeToChallenge] = useState("")
+
+    const todayChallengeDateTime = moment(challenge?.time?.start, 'HH:mm')
+    const nextChallengeDate = moment().isAfter(todayChallengeDateTime) ? moment().add(1, 'day') : moment()
+
+
+    const operationType = (value) => {
+        return {
+            type: ['withdral', 'loss'].includes(value) ? 'danger' : 'success',
+            sinal: ['withdral', 'loss'].includes(value) ? '-' : '+',
+        }
+    }
+    
+    useEffect(() => {
+        const intervalId = startInterval(updateTrackingTime, 1000)
+
+        return () => {
+            stopInterval(intervalId)
+        }
+
+    }, [challenge, isParticipating])
+
+    useEffect(() => {
+        dispatch(getHome())
+    }, [])
+
+    useEffect(() => {
+        setTimeToChallenge(
+            moment.duration(nextChallengeDate.diff(moment())).humanize()
+        )
+
+        if (timer?.countdown === '00:01' && timer?.isChallengeTime) {
+            dispatch(setTracking('loss'))
+        }
+
+    }, [timer?.countdown])
+
     return (
         <ScrollView background="dark">
             <GradientView
@@ -32,20 +95,22 @@ const Home = () => {
             >
                 <Box justify="center" spacing="0 0 0 0" align="center">
                     <Box justify="center" align="center" spacing="20px 0 0">
-                        <ProgressCircle progress={0.5} />
+                        <ProgressCircle progress={discipline} />
                         <Cover
                             width="100px"
                             height="100px"
                             circle
-                            image={'https://image.freepik.com/vetores-gratis/personagem-de-empresario-com-raiva-sentado-em-uma-cadeira-de-escritorio-a-mesa-e-olhando-no-visor-ilustracao-em-vetor-de-um-jovem-trabalhador-usando-oculos-com-emocao-negativa-isolada-em-um-branco_177953-304.jpg'}
+                            image={`${utils.AWS.bucketURL}/${user.photo}`}
                         />
-
                     </Box>
 
                     <Spacer size='30px' />
-                    <Title color="light">Weslley L Silva</Title>
+                    <Title color="light">
+                        { isParticipating ? `${(discipline*100)?.toFixed(0)}% de disciplina` : user?.name}
+                    </Title>
+
                     <Spacer size="5px" />
-                    <Text>weslleylopes.dev@gmail.com</Text>
+                    <Text>{ isParticipating ? `${participatedTimes}/${challengePeriod} dias concluídos` : user?.email }</Text>
 
                     <Touchable
                         spacing="30px 0 0"
@@ -55,124 +120,151 @@ const Home = () => {
                     >
                         <Text color="dark">Saldo conquistado</Text>
                         <Spacer />
-                        <Title color="light">R$ 29,90</Title>
+                        <Title color="light">R${balance?.toFixed(2)}</Title>
                     </Touchable>
                 </Box>
                 <Spacer size="20px" />
             </GradientView>
 
             <Box hasPadding spacing="-50px 0 0">
-
-                {/* Find informations */}
-                {/* <Box
-                    background="dark50"
-                    hasPadding
-                    radius="3px"
-                    align="center"
-                >
-                    <ActivityIndicator />
-                    <Spacer size="20px"/>
-                    <Title color="light" small>Buscando informações</Title>
-                    <Text>Aguarde alguns instantes...</Text>
-                </Box> */}
-
-                {/* Not found informations */}
-                {/* <Box
-                    background="dark50"
-                    hasPadding
-                    radius="3px"
-                    align="center"
-                >
-                    <Spacer size="20px"/>
-                    <Title color="light" small>Você ainda não tem desafios.</Title>
-                    <Spacer size="20px"/>
-                    <Button block background="success">Recarregar...</Button>
-                </Box> */}
-
-                {/* Exists challenges */}
-                {/* <>
+                {/* Finding informations */}
+                { form.loading && (
                     <Box
                         background="dark50"
                         hasPadding
                         radius="3px"
                         align="center"
                     >
-                        <Spacer size="20px" />
-                        <Title color="light" small>Correr 2km todos os dias às 5am durante 30 dias.</Title>
-                        <Spacer size="20px" />
-                        <Text>Mantenha a consistência correndo todos os dias para criar um novo hábito. O desafio termina em 30/08/2021</Text>
-                        <Spacer size="20px" />
-                        <Button block background="success">Quero participar</Button>
+                        <ActivityIndicator />
+                        <Spacer size="20px"/>
+                        <Title color="light" small>Buscando informações</Title>
+                        <Text>Aguarde alguns instantes...</Text>
                     </Box>
+                )}
 
-                    <Spacer size="20px" />
-                    <Box align="center">
-                        <Title color="light" small>Topa encarar esse desafio?</Title>
-                        <Spacer size="20px" />
-                        <YoutubePlayer
-                            height={180}
-                            width="100%"
-                            videoId="GfmrZjyabXo"
-                        />
+                {/* Don't have challenges */}
+                { !form.loading && !challenge && (
+                    <Box
+                        background="dark50"
+                        hasPadding
+                        radius="3px"
+                        align="center"
+                    >
+                        <Spacer size="20px"/>
+                        <Title color="light" small>Você ainda não tem desafios.</Title>
+                        <Spacer size="20px"/>
+                        <Button onPress={() => dispatch(getHome())} block background="success">Recarregar...</Button>
                     </Box>
-                </> */}
+                )}
 
-                {/* results today */}
-                
-                {/* <Box background="dark50" hasPadding justify="space-between">
-                    <Text color="light">Terça-feira, 03/08/2021</Text>
-                    <Spacer />
-                    <Title color="light">Resultados de hoje</Title>
-                    <Spacer size="30px"/>
-                    <FlatList
-                        data={[1, 2, 3, 4, 5, 6, 7, 8, 9]}
-                        ListEmptyComponent={() => (
-                            <Box hasPadding align="center">
-                                <Title>Nenhum resultado...</Title>
-                                <Text>Seu desafio começa em x horas...</Text>
-                                <Spacer size="20px" />
-                                <Button block background="success">Recarregar</Button>
-                            </Box>
-                        )}
-                        renderItem={({ item }) => (
-                            <Box row width="100%" height="50px" align="center">                                
-                                <Box row align="center">
-                                    <Cover
-                                        mode="cover"
-                                        width="35px"
-                                        height="35px"
-                                        circle
-                                        image={'https://image.freepik.com/vetores-gratis/personagem-de-empresario-com-raiva-sentado-em-uma-cadeira-de-escritorio-a-mesa-e-olhando-no-visor-ilustracao-em-vetor-de-um-jovem-trabalhador-usando-oculos-com-emocao-negativa-isolada-em-um-branco_177953-304.jpg'}
-                                        spacing="0 10px 0 0"
-                                    />
-                                    <Text bold color="light">Weslley L Silva</Text>
-                                </Box>
-                                <Badge>+ R$50,00</Badge>
-                            </Box>
-                        )}
-                    />
-                </Box> */}
+                {/* Exists challenges but do not participated */}
+                { !form.loading && challenge && !isParticipating && (
+                    <>
+                        <Box
+                            background="dark50"
+                            hasPadding
+                            radius="3px"
+                            align="center"
+                        >
+                            <Spacer size="20px" />
+                            <Title color="light" small>{challenge.title}.</Title>
+                            <Spacer size="20px" />
+                            <Text>{challenge.description}.</Text>
+                            <Spacer size="20px" />
+                            <Button 
+                                onPress={() => navigate('Payment')} 
+                                block 
+                                background="success"
+                                >
+                                    Quero participar
+                            </Button>
+                        </Box>
+                        <Spacer size="20px" />
+                        <Box align="center">
+                            <Title color="light" small>Topa encarar esse desafio?</Title>
+                            <Spacer size="20px" />
+                            <YoutubePlayer
+                                height={180}
+                                width="100%"
+                                videoId={challenge?.video}
+                            />
+                        </Box>
+                    </>
+                )}
 
                 {/* challenge time */}
-                <Box background="dark50" align="center" hasPadding radius>
-                    <Badge big color="success">+ R$50,00</Badge>
-                    <Spacer size="20" />
-                    <Text small>Terça-feira, 03/08/2021</Text>
-                    <Spacer />
-                    <Title color="light" small>Inicie seu desafio</Title>
-                    <Spacer size="40" />
+                { !form.loading && isParticipating && Boolean(challenge) && timer?.isChallengeTime &&  (
+                    <Box background="dark50" align="center" hasPadding radius>
+                        <Badge big color="success">
+                            + R$ {dailyAmount}
+                        </Badge>
+                        <Spacer size="20" />
+                        <Text small>{ moment().format('dddd[, ] DD/MM/YYYY') }</Text>
+                        <Spacer />
+                        <Title color="light" small>Inicie seu desafio</Title>
+                        <Spacer size="40" />
 
-                    <Title big bold color="light" scale={1.3}>30:00</Title>
+                        <Title big bold color="light" scale={1.3}>
+                            {timer?.countdown}
+                        </Title>
 
-                    <Spacer size="40" />
-                    <Button block color="primary">Iniciar Agora</Button>
-                </Box>
+                        <Spacer size="40" />
+                        <Button 
+                            block 
+                            color="primary"
+                            onPress={() => navigate('Timer')}
+                        >
+                                Iniciar Agora
+                        </Button>
+                    </Box>
+                )}
 
+                {/* Results today */}
+                { !form.loading && isParticipating && Boolean(challenge) && !timer?.isChallengeTime && (
+                    <Box background="dark50" hasPadding justify="space-between">
+                        <Text color="light">{ moment().format('dddd[, ] DD/MM/YYYY') }</Text>
+                        <Spacer />
+                        <Title color="light">Resultados de hoje</Title>
+                        <Spacer size="30px"/>
+                        <FlatList
+                            data={dailyResults}
+                            ListEmptyComponent={() => (
+                                <Box hasPadding align="center">
+                                    <Title>Nenhum resultado...</Title>
+                                    <Text>Seu desafio começa em {timeToChallenge}...</Text>
+                                    <Spacer size="20px" />
+                                    <Button block background="success">Recarregar</Button>
+                                </Box>
+                            )}
+                            keyExtractor={item => item?._id}
+                            renderItem={({ item }) => (
+                                <Box row width="100%" height="50px" align="center">                                
+                                    <Box row align="center">
+                                        <Cover
+                                            mode="cover"
+                                            width="35px"
+                                            height="35px"
+                                            circle
+                                            image={`${utils.AWS.bucketURL}/${item?.userId?.photo}`}
+                                            spacing="0 10px 0 0"
+                                        />
+                                        <Text bold color="light">{item?.userId?.name}</Text>
+                                    </Box>
+                                    <Badge 
+                                        color={operationType(item?.operation).type}
+                                    >
+                                            {operationType(item?.operation).sinal} R${item?.amount}
+                                    </Badge>
+                                </Box>
+                            )}
+                        />
+                    </Box>
+                )}
+
+                
 
             </Box>
         </ScrollView>
-
-
     )
 }
 

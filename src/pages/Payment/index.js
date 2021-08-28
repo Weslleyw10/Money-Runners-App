@@ -1,24 +1,51 @@
 import React from 'react'
-
-import { Box, Title, Text, Button, Spacer } from '../../components'
+import { useDispatch, useSelector } from 'react-redux'
+import { Alert } from 'react-native';
 import { CreditCardInput } from 'react-native-credit-card-input'
 
 import { colors } from '../../data/theme.json'
+import PaymentSchema from '../../schemas/payment.schema'
+import { Box, Title, Text, Button, Spacer } from '../../components'
+import { setReducer, joinChallenge } from '../../store/modules/app/actions'
 
 const Payment = () => {
+    const dispatch = useDispatch()
+    const { form, challenge, payment } = useSelector(state => state.app)
+
+    const joinChallengeHandle = async () => {
+        try {
+            await PaymentSchema.validate(payment)
+            dispatch(joinChallenge())
+
+        } catch ({ errors }) {
+            Alert.alert(errors[0], 'Corrija o erro antes de continuar.')            
+        }
+    }
+
+    const setPayment = ({ number, cvc, expiry, name }) => {
+        dispatch(
+            setReducer({
+                card_number: number?.split(' ').join(''),
+                card_cvv: cvc,
+                card_expiration_date: expiry?.replace('/', ''),
+                card_holder_name: name
+            }, 'payment')
+        )
+    }
+
     return (
         <Box background="dark" hasPadding>
             <Spacer size="40px" />
             <Box>
-                <Title color="light">Payment</Title>
+                <Title color="light">{challenge?.title}</Title>
                 <Spacer />
                 <Text>
-                    Mantenha a consistência correndo todos os dias para criar um novo hábito.
-                    O desafio termina em 30/08/2021
+                    {challenge?.description}
                 </Text>
 
                 <Spacer size="40px" />
-                <CreditCardInput 
+                <CreditCardInput
+                    onChange={({ values }) => setPayment(values)}
                     allowScroll
                     requiresName
                     placeholders={{
@@ -42,8 +69,14 @@ const Payment = () => {
                 />
             </Box>
 
-            <Button block background="success">
-                Pagar R$300,00
+            <Button 
+                onPress={() => joinChallengeHandle()} 
+                block 
+                background="success"
+                disabled={form?.saving}
+                loading={form?.saving}            
+            >
+                Pagar R${challenge?.fee}
             </Button>
         </Box>
     )
