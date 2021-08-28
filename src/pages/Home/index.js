@@ -50,7 +50,6 @@ const Home = () => {
     const todayChallengeDateTime = moment(challenge?.time?.start, 'HH:mm')
     const nextChallengeDate = moment().isAfter(todayChallengeDateTime) ? moment().add(1, 'day') : moment()
 
-
     const operationType = (value) => {
         return {
             type: ['withdral', 'loss'].includes(value) ? 'danger' : 'success',
@@ -59,17 +58,17 @@ const Home = () => {
     }
     
     useEffect(() => {
+        dispatch(getHome())
+    }, [])
+
+    useEffect(() => {
         const intervalId = startInterval(updateTrackingTime, 1000)
 
         return () => {
             stopInterval(intervalId)
         }
 
-    }, [challenge, isParticipating])
-
-    useEffect(() => {
-        dispatch(getHome())
-    }, [])
+    }, [challenge, isParticipating])    
 
     useEffect(() => {
         setTimeToChallenge(
@@ -95,7 +94,7 @@ const Home = () => {
             >
                 <Box justify="center" spacing="0 0 0 0" align="center">
                     <Box justify="center" align="center" spacing="20px 0 0">
-                        <ProgressCircle progress={discipline} />
+                        {isParticipating && <ProgressCircle progress={(discipline / challengePeriod).toFixed(1)} />}
                         <Cover
                             width="100px"
                             height="100px"
@@ -106,7 +105,7 @@ const Home = () => {
 
                     <Spacer size='30px' />
                     <Title color="light">
-                        { isParticipating ? `${(discipline*100)?.toFixed(0)}% de disciplina` : user?.name}
+                        { isParticipating ? `${((discipline / challengePeriod)*100).toFixed(0)}% de disciplina` : user?.name}
                     </Title>
 
                     <Spacer size="5px" />
@@ -260,9 +259,6 @@ const Home = () => {
                         />
                     </Box>
                 )}
-
-                
-
             </Box>
         </ScrollView>
     )

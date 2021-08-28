@@ -20,7 +20,7 @@ const Tour = () => {
         {
           bg: 'primary',
           button: 'dark',
-          title: 'Construa hábitos por bem (ou mal).',
+          title: 'Construa hábitos se divertindo.',
           desc: 'Pensamos em um serviço perfeito pra você não perder mais aquele compromisso inadiável (denovo).',
           pic: illustrationTwo,
         },

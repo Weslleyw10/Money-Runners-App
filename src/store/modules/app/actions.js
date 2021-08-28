@@ -64,6 +64,7 @@ export const getRanking = () => {
         type: types.GET_RANKING
     }
 }
+
 export const setTracking = (operation) => {
     return {
         type: types.SET_TRACKING,

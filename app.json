@@ -1,11 +1,15 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "WLS Money Runners",
+    "slug": "wls-money-runners",
     "version": "1.0.0",
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "android": {
+      "package": "app.wls.moneyrunners"
+    },
+    "description": ""
   },
-  "name": "app"
+  "name": "WLS Money Runners"
 }
